@@ -21,6 +21,8 @@ Current user: john.doe. Please enter MFA token: XXXXXX
 Wrote credentials to /home/foo/.aws/credentials
 ```
 
+Warning: the `~/.aws/credentials` is completely overwritten during `auth`. **If you use more than one profile you shouldn't use this tool**.
+
 ## Installing
 
 You can download binary releases (for Linux and Darwin) from GitHub: [https://github.com/uswitch/stscreds/releases](https://github.com/uswitch/stscreds/releases). Alternatively, you can also build from source using [Go](https://golang.org):
