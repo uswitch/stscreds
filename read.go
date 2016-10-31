@@ -27,11 +27,11 @@ func (cmd *ReadCommand) Execute() error {
 
 	section, err := cfg.GetSection(cmd.Profile)
 	if err != nil {
-		return fmt.Errorf("couldn't read [default] section: %s", err.Error())
+		return fmt.Errorf("couldn't read [%s] section: %s", cmd.Profile, err.Error())
 	}
 
 	if !section.HasKey(cmd.Key) {
-		return fmt.Errorf("%s not found in [default]", cmd.Key)
+		return fmt.Errorf("%s not found in [%s]", cmd.Key, cmd.Profile)
 	}
 	value := section.Key(cmd.Key).String()
 
