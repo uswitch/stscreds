@@ -12,6 +12,7 @@ import (
 type AuthCommand struct {
 	Expiry              time.Duration
 	OutputAsEnvVariable bool
+	Profile             string
 }
 
 func askUserForToken(sess *session.Session) (string, error) {
@@ -25,16 +26,10 @@ func askUserForToken(sess *session.Session) (string, error) {
 	return strings.Trim(text, " \n"), nil
 }
 
-func writeSTSCredentials(creds *Credentials, path string) error {
-	w, err := newCredentialsFileWriter(path)
-	if err != nil {
-		return err
-	}
-	err = w.Output(creds)
-	if err != nil {
-		return err
-	}
-	err = w.Close()
+func writeSTSCredentials(creds *Credentials, path, profile string) error {
+	w := newCredentialsFileWriter(path)
+
+	err := w.Output(creds, profile)
 	if err != nil {
 		return err
 	}
@@ -47,7 +42,7 @@ func (cmd *AuthCommand) Execute() error {
 		return fmt.Errorf("error determining aws credentials path: %s", err.Error())
 	}
 
-	sess, err := newSession()
+	sess, err := newLimitedAccessSession()
 	if err != nil {
 		return err
 	}
@@ -68,7 +63,7 @@ func (cmd *AuthCommand) Execute() error {
 		return fmt.Errorf("error requesting credentials: %s", err.Error())
 	}
 
-	err = writeSTSCredentials(creds, path)
+	err = writeSTSCredentials(creds, path, cmd.Profile)
 	if err != nil {
 		return fmt.Errorf("error writing credentials %s: %s", path, err.Error())
 	}

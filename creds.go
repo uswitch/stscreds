@@ -46,7 +46,7 @@ func credentialsExist() (bool, error) {
 	return true, nil
 }
 
-func newSession() (*session.Session, error) {
+func newLimitedAccessSession() (*session.Session, error) {
 	p, err := limitedAccessCredentialsPath()
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func requestNewSTSToken(sess *session.Session, username, mfaToken string, expiry
 		SerialNumber:    aws.String(serial),
 		TokenCode:       aws.String(mfaToken),
 	}
-	session, err := newSession()
+	session, err := newLimitedAccessSession()
 	if err != nil {
 		return nil, err
 	}
@@ -137,11 +137,6 @@ func (c *Credentials) String() string {
 	return fmt.Sprintf("Access Key: %s\nSecret Key: %s\nSession Token: %s\n", c.AccessKey, c.SecretKey, c.SessionToken)
 }
 
-type CredentialsWriter interface {
-	Output(c *Credentials) error
-	Close() error
-}
-
 func envVarExportsOutput(c *Credentials) {
 	fmt.Println()
 	fmt.Printf("export AWS_ACCESS_KEY_ID=\"%s\"\n", c.AccessKey)
@@ -150,17 +145,16 @@ func envVarExportsOutput(c *Credentials) {
 }
 
 type CredsWriter struct {
-	writer *bufio.Writer
-	f      *os.File
+	path string
 }
 
-func (w *CredsWriter) Close() error {
-	return w.f.Close()
-}
+func (w *CredsWriter) Output(c *Credentials, profile string) error {
+	cfg, err := ini.Load(w.path)
+	if err != nil {
+		return err
+	}
 
-func (w *CredsWriter) Output(c *Credentials) error {
-	cfg := ini.Empty()
-	sec, err := cfg.NewSection("default")
+	sec, err := cfg.NewSection(profile)
 	if err != nil {
 		return err
 	}
@@ -178,21 +172,11 @@ func (w *CredsWriter) Output(c *Credentials) error {
 		return err
 	}
 
-	_, err = cfg.WriteTo(w.writer)
-	if err != nil {
-		return err
-	}
-
-	return w.writer.Flush()
+	return cfg.SaveTo(w.path)
 }
 
-func newCredentialsFileWriter(credentialsPath string) (CredentialsWriter, error) {
-	f, err := os.OpenFile(credentialsPath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0600)
-	if err != nil {
-		return nil, err
-	}
-	w := bufio.NewWriter(f)
-	return &CredsWriter{w, f}, nil
+func newCredentialsFileWriter(credentialsPath string) *CredsWriter {
+	return &CredsWriter{credentialsPath}
 }
 
 type Expiration struct {

@@ -7,7 +7,7 @@ import (
 type WhoAmI struct{}
 
 func (w *WhoAmI) Execute() error {
-	sess, err := newSession()
+	sess, err := newLimitedAccessSession()
 	if err != nil {
 		return err
 	}

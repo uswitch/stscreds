@@ -14,6 +14,7 @@ var (
 
 	authCommand    = kingpin.Command("auth", "Authenticates with AWS and requests a temporary session token.")
 	envVarTemplate = authCommand.Flag("output-env", "Additionally write environment variable exports to stdout.").Bool()
+	profile        = authCommand.Flag("profile", "AWS profile to manage credentials for.").Default("default").String()
 
 	readCommand = kingpin.Command("read", "Read keys from ~/.aws/credentials and print to stdout.")
 	readKey     = readCommand.Arg("key", "Key to read from credentials file: aws_access_key_id, aws_secret_access_key, aws_session_token.").String()
@@ -62,7 +63,7 @@ func handle() error {
 	case "whoami":
 		return cmdFailWithoutInitialisation(&WhoAmI{})
 	case "auth":
-		return cmdFailWithoutInitialisation(&AuthCommand{Expiry: *expires, OutputAsEnvVariable: *envVarTemplate})
+		return cmdFailWithoutInitialisation(&AuthCommand{Expiry: *expires, OutputAsEnvVariable: *envVarTemplate, Profile: *profile})
 	case "read":
 		return cmdFailWithoutInitialisation(&ReadCommand{Key: *readKey, Expiry: *expires})
 	}
