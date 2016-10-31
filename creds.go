@@ -46,7 +46,7 @@ func credentialsExist() (bool, error) {
 	return true, nil
 }
 
-func newLimitedAccessSession() (*session.Session, error) {
+func newLimitedAccessSession(profile string) (*session.Session, error) {
 	p, err := limitedAccessCredentialsPath()
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func mfaSerialNumber(sess *session.Session, username string) (string, error) {
 	return *devices[0].SerialNumber, nil
 }
 
-func requestNewSTSToken(sess *session.Session, username, mfaToken string, expiry time.Duration) (*Credentials, error) {
+func requestNewSTSToken(sess *session.Session, username, mfaToken string, expiry time.Duration, profile string) (*Credentials, error) {
 	serial, err := mfaSerialNumber(sess, username)
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func requestNewSTSToken(sess *session.Session, username, mfaToken string, expiry
 		SerialNumber:    aws.String(serial),
 		TokenCode:       aws.String(mfaToken),
 	}
-	session, err := newLimitedAccessSession()
+	session, err := newLimitedAccessSession(profile)
 	if err != nil {
 		return nil, err
 	}

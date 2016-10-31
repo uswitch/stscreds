@@ -11,10 +11,10 @@ import (
 var (
 	initCommand = kingpin.Command("init", "Initialise stscreds. Creates ~/.stscreds/credentials.")
 	expires     = kingpin.Flag("expires", "Credentials expiry").Default("12h").Duration()
+	profile     = kingpin.Flag("profile", "AWS profile to manage credentials for.").Default("default").String()
 
 	authCommand    = kingpin.Command("auth", "Authenticates with AWS and requests a temporary session token.")
 	envVarTemplate = authCommand.Flag("output-env", "Additionally write environment variable exports to stdout.").Bool()
-	profile        = authCommand.Flag("profile", "AWS profile to manage credentials for.").Default("default").String()
 
 	readCommand = kingpin.Command("read", "Read keys from ~/.aws/credentials and print to stdout.")
 	readKey     = readCommand.Arg("key", "Key to read from credentials file: aws_access_key_id, aws_secret_access_key, aws_session_token.").String()
@@ -58,14 +58,14 @@ func cmdFailWithoutInitialisation(cmd Command) error {
 func handle() error {
 	switch kingpin.Parse() {
 	case "init":
-		cmd := &InitCommand{}
+		cmd := &InitCommand{Profile: *profile}
 		return cmd.Execute()
 	case "whoami":
-		return cmdFailWithoutInitialisation(&WhoAmI{})
+		return cmdFailWithoutInitialisation(&WhoAmI{Profile: *profile})
 	case "auth":
 		return cmdFailWithoutInitialisation(&AuthCommand{Expiry: *expires, OutputAsEnvVariable: *envVarTemplate, Profile: *profile})
 	case "read":
-		return cmdFailWithoutInitialisation(&ReadCommand{Key: *readKey, Expiry: *expires})
+		return cmdFailWithoutInitialisation(&ReadCommand{Key: *readKey, Expiry: *expires, Profile: *profile})
 	}
 	return nil
 }

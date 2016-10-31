@@ -4,10 +4,12 @@ import (
 	"fmt"
 )
 
-type WhoAmI struct{}
+type WhoAmI struct {
+	Profile string
+}
 
 func (w *WhoAmI) Execute() error {
-	sess, err := newLimitedAccessSession()
+	sess, err := newLimitedAccessSession(w.Profile)
 	if err != nil {
 		return err
 	}

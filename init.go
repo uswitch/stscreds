@@ -13,11 +13,28 @@ import (
 )
 
 type InitCommand struct {
+	Profile string
+}
+
+func (c *InitCommand) credentialsFile(path string) (*ini.File, error) {
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return ini.Empty(), nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return ini.Load(path)
 }
 
 func (c *InitCommand) writeFile(accessKey, secretKey, path string) error {
-	cfg := ini.Empty()
-	sec, _ := cfg.NewSection("default")
+	cfg, err := c.credentialsFile(path)
+	if err != nil {
+		return err
+	}
+
+	sec, _ := cfg.NewSection(c.Profile)
 	sec.NewKey("aws_access_key_id", accessKey)
 	sec.NewKey("aws_secret_access_key", secretKey)
 

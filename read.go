@@ -8,8 +8,9 @@ import (
 )
 
 type ReadCommand struct {
-	Key    string
-	Expiry time.Duration
+	Key     string
+	Expiry  time.Duration
+	Profile string
 }
 
 func (cmd *ReadCommand) Execute() error {
@@ -24,7 +25,7 @@ func (cmd *ReadCommand) Execute() error {
 		return fmt.Errorf("error reading credentials: %s", err.Error())
 	}
 
-	section, err := cfg.GetSection("default")
+	section, err := cfg.GetSection(cmd.Profile)
 	if err != nil {
 		return fmt.Errorf("couldn't read [default] section: %s", err.Error())
 	}

@@ -42,7 +42,7 @@ func (cmd *AuthCommand) Execute() error {
 		return fmt.Errorf("error determining aws credentials path: %s", err.Error())
 	}
 
-	sess, err := newLimitedAccessSession()
+	sess, err := newLimitedAccessSession(cmd.Profile)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (cmd *AuthCommand) Execute() error {
 		return fmt.Errorf("error requesting mfa token: %s", err.Error())
 	}
 
-	creds, err := requestNewSTSToken(sess, username, token, cmd.Expiry)
+	creds, err := requestNewSTSToken(sess, username, token, cmd.Expiry, cmd.Profile)
 	if err != nil {
 		return fmt.Errorf("error requesting credentials: %s", err.Error())
 	}
