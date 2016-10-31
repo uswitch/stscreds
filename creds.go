@@ -51,7 +51,7 @@ func newLimitedAccessSession(profile string) (*session.Session, error) {
 	if err != nil {
 		return nil, err
 	}
-	stsCreds := credentials.NewSharedCredentials(p, "default")
+	stsCreds := credentials.NewSharedCredentials(p, profile)
 	return session.New(&aws.Config{Credentials: stsCreds}), nil
 }
 
