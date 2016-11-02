@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/alecthomas/kingpin"
 	"os"
-	"os/user"
-	"path/filepath"
 )
 
 var (
@@ -31,50 +29,75 @@ func versionString() string {
 	return "DEVELOPMENT"
 }
 
-func homePath(paths ...string) (string, error) {
-	u, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-	parts := append([]string{u.HomeDir}, paths...)
-	return filepath.Join(parts...), nil
-}
-
 type Command interface {
 	Execute() error
 }
 
-func cmdFailWithoutInitialisation(cmd Command) error {
-	exist, err := credentialsExist()
+func newCommand(command string) (Command, error) {
+	switch command {
+	case "whoami":
+		return &WhoAmI{Profile: *profile}, nil
+	case "auth":
+		return &AuthCommand{Expiry: *expires, OutputAsEnvVariable: *envVarTemplate, Profile: *profile}, nil
+	case "read":
+		return &ReadCommand{Key: *readKey, Expiry: *expires, Profile: *profile}, nil
+	}
+	return nil, fmt.Errorf("Command not found: %s", command)
+}
+
+func handle(command string) error {
+	if command == "init" {
+		cmd := &InitCommand{Profile: *profile}
+		return cmd.Execute()
+	}
+
+	creds, err := DefaultLimitedAccessCredentials(*profile)
 	if err != nil {
 		return err
 	}
-	if !exist {
-		return fmt.Errorf("no credentials found, please run init first.")
+
+	exist, err := creds.Exist()
+	if err != nil {
+		return err
 	}
-	return cmd.Execute()
+
+	if !exist {
+		return fmt.Errorf("Limited access credentials not found, please run init first.")
+	}
+
+	cmd, err := newCommand(command)
+	if err != nil {
+		return err
+	}
+
+	err = cmd.Execute()
+	if err == nil {
+		return nil
+	}
+
+	if _, ok := err.(ExpiredCredentialsErr); ok {
+		err = handle("auth")
+		if err != nil {
+			return err
+		}
+		return handle(command)
+	}
+
+	return err
 }
 
-func handle() error {
-	switch kingpin.Parse() {
-	case "init":
-		cmd := &InitCommand{Profile: *profile}
-		return cmd.Execute()
-	case "whoami":
-		return cmdFailWithoutInitialisation(&WhoAmI{Profile: *profile})
-	case "auth":
-		return cmdFailWithoutInitialisation(&AuthCommand{Expiry: *expires, OutputAsEnvVariable: *envVarTemplate, Profile: *profile})
-	case "read":
-		return cmdFailWithoutInitialisation(&ReadCommand{Key: *readKey, Expiry: *expires, Profile: *profile})
-	}
-	return nil
+func fatal(e error) {
+	fmt.Fprintf(os.Stderr, "error: %s\n", e.Error())
+	os.Exit(2)
 }
 
 func main() {
 	kingpin.Version(versionString())
-	err := handle()
+	command := kingpin.Parse()
+
+	err := handle(command)
+
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err.Error())
-		os.Exit(2)
+		fatal(err)
 	}
 }

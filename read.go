@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"gopkg.in/ini.v1"
-	"os"
 	"time"
 )
 
@@ -13,60 +11,38 @@ type ReadCommand struct {
 	Profile string
 }
 
+type ExpiredCredentialsErr string
+
+func (e ExpiredCredentialsErr) Error() string {
+	return "Credentials have expired"
+}
+
 func (cmd *ReadCommand) Execute() error {
-	err := cmd.ensureCredentialsFresh()
+	limitedCredentials, err := DefaultLimitedAccessCredentials(cmd.Profile)
 	if err != nil {
-		return fmt.Errorf("error checking credentials: %s", err.Error())
+		return err
 	}
 
-	path, err := defaultAWSCredentialsPath()
-	cfg, err := ini.Load(path)
+	expired, err := limitedCredentials.IsTemporaryCredentialsExpired(time.Now())
 	if err != nil {
-		return fmt.Errorf("error reading credentials: %s", err.Error())
+		return err
 	}
 
-	section, err := cfg.GetSection(cmd.Profile)
-	if err != nil {
-		return fmt.Errorf("couldn't read [%s] section: %s", cmd.Profile, err.Error())
+	if expired {
+		return ExpiredCredentialsErr(cmd.Profile)
 	}
 
-	if !section.HasKey(cmd.Key) {
-		return fmt.Errorf("%s not found in [%s]", cmd.Key, cmd.Profile)
+	creds, err := DefaultTemporaryCredentials(cmd.Profile)
+	if err != nil {
+		return err
 	}
-	value := section.Key(cmd.Key).String()
+
+	value, err := creds.Read(cmd.Key)
+	if err != nil {
+		return fmt.Errorf("error reading %s: %s", cmd.Key, err.Error())
+	}
 
 	fmt.Print(value)
 
 	return nil
-}
-
-func (cmd *ReadCommand) isCredentialsFresh() (bool, error) {
-	ex, err := readExpiry()
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, nil
-		} else {
-			return false, err
-		}
-	}
-	expired := time.Now().After(ex.Expiry)
-	return !expired, nil
-}
-
-func (cmd *ReadCommand) ensureCredentialsFresh() error {
-	fresh, err := cmd.isCredentialsFresh()
-	if err != nil {
-		return err
-	}
-	if !fresh {
-		return cmd.refreshCredentials()
-	}
-
-	return nil
-}
-
-func (cmd *ReadCommand) refreshCredentials() error {
-	fmt.Println("Credentials have expired, need to refresh.")
-	auth := &AuthCommand{Expiry: *expires}
-	return auth.Execute()
 }

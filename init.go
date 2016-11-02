@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"gopkg.in/ini.v1"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -110,11 +109,7 @@ func readAWSKeys() (*Keys, error) {
 func (cmd *InitCommand) Execute() error {
 	warnOnEnvironmentVariables()
 
-	path, err := limitedAccessCredentialsPath()
-	if err != nil {
-		return err
-	}
-	err = os.MkdirAll(filepath.Dir(path), 0700)
+	creds, err := DefaultLimitedAccessCredentials(cmd.Profile)
 	if err != nil {
 		return err
 	}
@@ -124,11 +119,32 @@ func (cmd *InitCommand) Execute() error {
 		return fmt.Errorf("error with aws credentials: %s", err.Error())
 	}
 
-	err = cmd.writeFile(keys.AccessKey, keys.SecretKey, path)
+	err = creds.Initialise(keys)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "Successfully wrote %s\n", path)
+	fmt.Fprintf(os.Stderr, "Successfully wrote %s\n", creds.path)
+
+	// path, err := limitedAccessCredentialsPath()
+	// if err != nil {
+	// 	return err
+	// }
+	// err = os.MkdirAll(filepath.Dir(path), 0700)
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// keys, err := readAWSKeys()
+	// if err != nil {
+	// 	return fmt.Errorf("error with aws credentials: %s", err.Error())
+	// }
+	//
+	// err = cmd.writeFile(keys.AccessKey, keys.SecretKey, path)
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// fmt.Fprintf(os.Stderr, "Successfully wrote %s\n", path)
 	return nil
 }

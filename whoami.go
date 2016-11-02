@@ -9,7 +9,12 @@ type WhoAmI struct {
 }
 
 func (w *WhoAmI) Execute() error {
-	sess, err := newLimitedAccessSession(w.Profile)
+	creds, err := DefaultLimitedAccessCredentials(w.Profile)
+	if err != nil {
+		return err
+	}
+
+	sess, err := creds.NewSession()
 	if err != nil {
 		return err
 	}
