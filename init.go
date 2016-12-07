@@ -126,25 +126,5 @@ func (cmd *InitCommand) Execute() error {
 
 	fmt.Fprintf(os.Stderr, "Successfully wrote %s\n", creds.path)
 
-	// path, err := limitedAccessCredentialsPath()
-	// if err != nil {
-	// 	return err
-	// }
-	// err = os.MkdirAll(filepath.Dir(path), 0700)
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// keys, err := readAWSKeys()
-	// if err != nil {
-	// 	return fmt.Errorf("error with aws credentials: %s", err.Error())
-	// }
-	//
-	// err = cmd.writeFile(keys.AccessKey, keys.SecretKey, path)
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// fmt.Fprintf(os.Stderr, "Successfully wrote %s\n", path)
 	return nil
 }

@@ -193,7 +193,7 @@ func (c *LimitedAccessCredentials) Initialise(keys *Keys) error {
 		return err
 	}
 
-	return nil
+	return cfg.SaveTo(c.path)
 }
 
 func (c *LimitedAccessCredentials) NewSession() (*session.Session, error) {
