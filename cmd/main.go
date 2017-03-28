@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/alecthomas/kingpin"
+	stscreds "github.com/uswitch/stscreds/pkg"
 	"os"
 )
 
@@ -36,22 +37,22 @@ type Command interface {
 func newCommand(command string) (Command, error) {
 	switch command {
 	case "whoami":
-		return &WhoAmI{Profile: *profile}, nil
+		return &stscreds.WhoAmI{Profile: *profile}, nil
 	case "auth":
-		return &AuthCommand{Expiry: *expires, OutputAsEnvVariable: *envVarTemplate, Profile: *profile}, nil
+		return &stscreds.AuthCommand{Expiry: *expires, OutputAsEnvVariable: *envVarTemplate, Profile: *profile}, nil
 	case "read":
-		return &ReadCommand{Key: *readKey, Expiry: *expires, Profile: *profile}, nil
+		return &stscreds.ReadCommand{Key: *readKey, Expiry: *expires, Profile: *profile}, nil
 	}
 	return nil, fmt.Errorf("Command not found: %s", command)
 }
 
 func handle(command string) error {
 	if command == "init" {
-		cmd := &InitCommand{Profile: *profile}
+		cmd := &stscreds.InitCommand{Profile: *profile}
 		return cmd.Execute()
 	}
 
-	creds, err := DefaultLimitedAccessCredentials(*profile)
+	creds, err := stscreds.DefaultLimitedAccessCredentials(*profile)
 	if err != nil {
 		return err
 	}
@@ -75,7 +76,7 @@ func handle(command string) error {
 		return nil
 	}
 
-	if _, ok := err.(ExpiredCredentialsErr); ok {
+	if _, ok := err.(stscreds.ExpiredCredentialsErr); ok {
 		err = handle("auth")
 		if err != nil {
 			return err
