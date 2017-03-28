@@ -41,7 +41,7 @@ func newCommand(command string) (Command, error) {
 	case "auth":
 		return &stscreds.AuthCommand{Expiry: *expires, OutputAsEnvVariable: *envVarTemplate, Profile: *profile}, nil
 	case "read":
-		return &stscreds.ReadCommand{Key: *readKey, Expiry: *expires, Profile: *profile}, nil
+		return &stscreds.ReadCommand{Key: *readKey, Profile: *profile}, nil
 	}
 	return nil, fmt.Errorf("Command not found: %s", command)
 }

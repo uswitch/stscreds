@@ -7,7 +7,6 @@ import (
 
 type ReadCommand struct {
 	Key     string
-	Expiry  time.Duration
 	Profile string
 }
 
