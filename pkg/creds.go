@@ -2,14 +2,15 @@ package stscreds
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"gopkg.in/ini.v1"
 	"os"
 	"os/user"
 	"path/filepath"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"gopkg.in/ini.v1"
 )
 
 func homePath(paths ...string) (string, error) {

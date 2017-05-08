@@ -3,10 +3,11 @@ package stscreds
 import (
 	"bufio"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws/session"
 )
 
 type AuthCommand struct {
@@ -27,6 +28,11 @@ func askUserForToken(sess *session.Session) (string, error) {
 }
 
 func (cmd *AuthCommand) Execute() error {
+	err := ensureAwsDir()
+	if err != nil {
+		return fmt.Errorf("Error ensuring .aws directory: %s", err)
+	}
+
 	limitedCreds, err := DefaultLimitedAccessCredentials(cmd.Profile)
 	if err != nil {
 		return err

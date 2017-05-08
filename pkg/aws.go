@@ -2,12 +2,28 @@ package stscreds
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/sts"
-	"time"
 )
+
+func ensureAwsDir() error {
+	awsDir, err := homePath(".aws")
+	if err != nil {
+		return fmt.Errorf("Error finding home directory: %s", err)
+	}
+	if _, err = os.Stat(awsDir); os.IsNotExist(err) {
+		err := os.Mkdir(awsDir, 0755)
+		if err != nil {
+			return fmt.Errorf("Error creating .aws directory: %s", err)
+		}
+	}
+	return nil
+}
 
 func mfaDevices(sess *session.Session, username string) ([]*iam.MFADevice, error) {
 	svc := iam.New(sess)
