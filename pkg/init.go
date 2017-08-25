@@ -81,13 +81,13 @@ func readFromPrompt() (*Keys, error) {
 	if err != nil {
 		return nil, err
 	}
-	accessKey := strings.Trim(text, " \n")
+	accessKey := strings.Trim(text, " \r\n")
 	fmt.Fprintf(os.Stderr, "AWS Secret Access Key: ")
 	text, err = reader.ReadString('\n')
 	if err != nil {
 		return nil, err
 	}
-	secretKey := strings.Trim(text, " \n")
+	secretKey := strings.Trim(text, " \r\n")
 
 	return &Keys{accessKey, secretKey}, nil
 }
