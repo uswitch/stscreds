@@ -24,7 +24,7 @@ func askUserForToken(sess *session.Session) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error reading token: %s", err.Error())
 	}
-	return strings.Trim(text, " \n"), nil
+	return strings.Trim(text, " \r\n"), nil
 }
 
 func (cmd *AuthCommand) Execute() error {
