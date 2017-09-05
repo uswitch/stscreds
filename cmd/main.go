@@ -39,7 +39,11 @@ func newCommand(command string) (Command, error) {
 	case "whoami":
 		return &stscreds.WhoAmI{Profile: *profile}, nil
 	case "auth":
-		return &stscreds.AuthCommand{Expiry: *expires, OutputAsEnvVariable: *envVarTemplate, Profile: *profile}, nil
+		cmd := stscreds.DefaultAuthCommand()
+		cmd.Expiry = *expires
+		cmd.OutputAsEnvVariable = *envVarTemplate
+		cmd.Profile = *profile
+		return cmd, nil
 	case "read":
 		return &stscreds.ReadCommand{Key: *readKey, Profile: *profile}, nil
 	}

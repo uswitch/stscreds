@@ -8,13 +8,15 @@ import (
 	"time"
 )
 
-type AuthCommand struct {
-	Expiry              time.Duration
-	OutputAsEnvVariable bool
-	Profile             string
+// interface to allow other things to provide tokens
+type TokenReader interface {
+	Read() (string, error)
 }
 
-func askUserForToken() (string, error) {
+type StdioTokenReader struct {
+}
+
+func (f *StdioTokenReader) Read() (string, error) {
 	fmt.Fprintf(os.Stderr, "Please enter MFA token: ")
 
 	reader := bufio.NewReader(os.Stdin)
@@ -23,6 +25,20 @@ func askUserForToken() (string, error) {
 		return "", fmt.Errorf("error reading token: %s", err.Error())
 	}
 	return strings.Trim(text, " \r\n"), nil
+}
+
+type AuthCommand struct {
+	Expiry              time.Duration
+	OutputAsEnvVariable bool
+	Profile             string
+	TokenReader         TokenReader
+}
+
+// creates an auth command suitable for reading from stdin with a prompt
+func DefaultAuthCommand() *AuthCommand {
+	return &AuthCommand{
+		TokenReader: &StdioTokenReader{},
+	}
 }
 
 func (cmd *AuthCommand) Execute() error {
@@ -47,7 +63,7 @@ func (cmd *AuthCommand) Execute() error {
 
 	fmt.Fprintf(os.Stderr, "Current user: %s. ", username)
 
-	token, err := askUserForToken()
+	token, err := cmd.TokenReader.Read()
 	if err != nil {
 		return fmt.Errorf("error requesting mfa token: %s", err.Error())
 	}
