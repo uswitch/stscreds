@@ -6,8 +6,6 @@ import (
 	"os"
 	"strings"
 	"time"
-
-	"github.com/aws/aws-sdk-go/aws/session"
 )
 
 type AuthCommand struct {
@@ -16,7 +14,7 @@ type AuthCommand struct {
 	Profile             string
 }
 
-func askUserForToken(sess *session.Session) (string, error) {
+func askUserForToken() (string, error) {
 	fmt.Fprintf(os.Stderr, "Please enter MFA token: ")
 
 	reader := bufio.NewReader(os.Stdin)
@@ -49,7 +47,7 @@ func (cmd *AuthCommand) Execute() error {
 
 	fmt.Fprintf(os.Stderr, "Current user: %s. ", username)
 
-	token, err := askUserForToken(limitedAccessSession)
+	token, err := askUserForToken()
 	if err != nil {
 		return fmt.Errorf("error requesting mfa token: %s", err.Error())
 	}
